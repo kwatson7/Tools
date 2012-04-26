@@ -5,8 +5,9 @@ import android.util.AttributeSet;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 
-//TODO: figure out what this does and why we have it, adn then comment
-public class CustomAutoComplete extends AutoCompleteTextView {
+//TODO: figure out what this class does and why we have it, adn then comment
+public class CustomAutoComplete
+extends AutoCompleteTextView {
 	private String previous = "";
 	private String seperator = ";";
 	public CustomAutoComplete(final Context context, 

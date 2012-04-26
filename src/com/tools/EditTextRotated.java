@@ -6,10 +6,10 @@ import android.util.AttributeSet;
 import android.widget.EditText;
 
 public class EditTextRotated extends EditText {
-
+//TODO: this class doesn't always work for unknown reasons
+	
 	public EditTextRotated(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -18,8 +18,6 @@ public class EditTextRotated extends EditText {
 	     canvas.rotate(90);
 	     super.onDraw(canvas);
 	     canvas.restore();
-	     
-
 	}
 
 }

@@ -8,9 +8,7 @@ public class TwoObjects <TYPE1, TYPE2>
 implements Comparable<TwoObjects<String, TYPE2>>, 
 Serializable
 {
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 7342182516607618554L;
 	public TYPE1 mObject1;
 	public TYPE2 mObject2;

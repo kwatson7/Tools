@@ -16,12 +16,12 @@ import android.widget.TextView;
 
 /**
  * A modified Spinner that doesn't automatically select the first entry in the list.
- *
  * Shows the prompt if nothing is selected.
- *
  * Limitations: does not display prompt if the entry list is empty.
  */
-public class NoDefaultSpinner extends Spinner {
+public class NoDefaultSpinner
+extends Spinner{
+//TODO: clean up this code
 
     public NoDefaultSpinner(Context context) {
         super(context);
@@ -35,8 +35,9 @@ public class NoDefaultSpinner extends Spinner {
         super(context, attrs, defStyle);
     }
 
-    @Override
-    public void setAdapter(SpinnerAdapter orig ) {
+    //TODO: determine if we want this setAdapter method or not.
+   // @Override
+    public void setAdapter2(SpinnerAdapter orig ) {
         final SpinnerAdapter adapter = newProxy(orig);
 
         super.setAdapter(adapter);
@@ -61,8 +62,6 @@ public class NoDefaultSpinner extends Spinner {
                 new Class[]{SpinnerAdapter.class},
                 new SpinnerAdapterProxy(obj));
     }    
-
-
 
     /**
      * Intercepts getView() to display the prompt if position < 0

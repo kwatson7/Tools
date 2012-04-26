@@ -1,6 +1,8 @@
 package com.tools;
 
-/** simple class to store success boolean and reason if success==false*/
+/**
+ * simple class to store success boolean and reason if success==false
+ * */
 public class SuccessReason {
 
 	private Boolean mSuccess;

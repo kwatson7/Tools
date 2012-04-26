@@ -9,6 +9,7 @@ public class WidthHeight {
 
 	/** The width of object */
 	public int width;
+	
 	/** The height of the object */
 	public int height;
 

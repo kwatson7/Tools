@@ -2,19 +2,13 @@ package com.tools;
 
 import java.util.ArrayList;
 
-import sun.security.action.GetLongAction;
-
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Typeface;
 import android.text.SpannableString;
 import android.text.style.StyleSpan;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -33,17 +27,17 @@ import android.widget.TextView;
 public class SelectOptionAndInputPopUp extends AlertDialog{
 
 	//TODO: seperate out view and adapter into their own files
-	// variables
-	private ArrayList<TwoStrings> mMainArrayList;  
-	private ListView listView;
-	private Context mCtx;
-	private int mCheckedItem; 						// The position of the checked item
-	private EditText mInput; 						// The editText for the input
+	// member variables
+	private ArrayList<TwoStrings> mMainArrayList;   		// holds data
+	private ListView listView; 								// the list view
+	private Context mCtx; 											
+	private int mCheckedItem; 								// The position of the checked item
+	private EditText mInput; 								// The editText for the input
 
 	/**
 	 * Constructor
-	 * @param ctx The context where this dialog is callsed
-	 * @param mainArrayList The arrayList of TwoStrings ot show
+	 * @param ctx The context where this dialog is called
+	 * @param mainArrayList The arrayList of TwoStrings to show
 	 * @param title The title of the listView
 	 * @param defaultSelected Which item should start of checked
 	 * @param hint The hint to show in the input box
@@ -54,7 +48,8 @@ public class SelectOptionAndInputPopUp extends AlertDialog{
 			String title,
 			int defaultSelected,
 			String hint, 
-			Integer layoutResID){
+			Integer layoutResID,
+			boolean isShowInputBox){
 
 		// create it
 		super(ctx);
@@ -107,7 +102,10 @@ public class SelectOptionAndInputPopUp extends AlertDialog{
 
 		// add list view to dialog
 		linear.addView(listView);
-		//this.setView(listView);
+		
+		// should we actually show the input box
+		if (isShowInputBox == false)
+			mInput.setVisibility(View.GONE);
 		
 		// make it cancelable
 		this.setCancelable(true);
@@ -136,7 +134,8 @@ public class SelectOptionAndInputPopUp extends AlertDialog{
      * A sample ListAdapter that presents content from arrays of two strings.
      * 
      */
-    private class TwoStringListViewAdapter extends BaseAdapter {
+    private class TwoStringListViewAdapter
+    extends BaseAdapter {
 
        	// variables to be used
         private Context mContext;

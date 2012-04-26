@@ -12,7 +12,8 @@ import android.widget.EditText;
  * @author Kyle
  *
  */
-public class ClearableEditText extends EditText{
+public class ClearableEditText
+extends EditText{
 	
 	// private variables
 	/**

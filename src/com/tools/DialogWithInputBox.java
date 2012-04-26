@@ -7,7 +7,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.EditText;
 
-public class DialogWithInputBox extends Activity {
+/**
+ * A simple activity that emulates a dialog with an input box <br>
+ * See the public constants for different input and output keys that can be set/read from intents
+ * @author Kyle
+ */
+public class DialogWithInputBox
+extends Activity {
 	
 	public static final String HINT_BUNDLE = "hint";
 	public static final String TITLE_BUNDLE = "title";

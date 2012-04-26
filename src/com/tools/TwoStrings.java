@@ -1,5 +1,6 @@
 package com.tools;
 
+
 /**
  * Stores two string together. Also these strings are comparable and can
  * thus be sorted. The sorting is performed on the first string, and then the second if the firsts are equal.
@@ -50,10 +51,21 @@ public class TwoStrings implements Comparable<TwoStrings>{
 	/**
 	 * These two objects are considered equal if their first strings match
 	 */
+	@Override
 	public boolean equals(Object o){
+		if (!( o instanceof TwoStrings))
+			return false;
 		String e = this.mObject1;
 		String input = ((TwoStrings) o).mObject1;
 		return (input==null ? e==null : input.equals(e));
+	}
+	
+	@Override
+	public int hashCode(){
+		if (mObject1 == null)
+			return 0;
+		else
+			return mObject1.hashCode();
 	}
 	
 	/**

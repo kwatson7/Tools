@@ -1,7 +1,6 @@
 package com.tools;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -11,21 +10,19 @@ import android.app.Activity;
 import android.content.Context;
 
 /**
- *
  * Writes/reads an object to/from a private local file
- * 
- *
  */
 public class LocalPersistence {
 
 
 	/**
-	 * 
-	 * @param context
-	 * @param object
-	 * @param filename
+	 * @param context Context required to write the object
+	 * @param object The object to write
+	 * @param filename the filename to write to
+	 * @throws IOException 
 	 */
-	public static void witeObjectToFile(Context context, Object object, String filename) {
+	public static void witeObjectToFile(Context context, Object object, String filename)
+	throws IOException {
 
 		ObjectOutputStream objectOut = null;
 		try {
@@ -33,33 +30,27 @@ public class LocalPersistence {
 			// create output stream
 			FileOutputStream fileOut = context.openFileOutput(filename, Activity.MODE_PRIVATE);
 			objectOut = new ObjectOutputStream(fileOut);
-			
+
 			// write the object
 			objectOut.writeObject(object);
 			fileOut.getFD().sync();
 
-		// catch errors
-		} catch (IOException e) {
-			e.printStackTrace();
 		} finally {
-			if (objectOut != null) {
-				try {
-					objectOut.close();
-				} catch (IOException e) {
-					// do nowt
-				}
-			}
+			if (objectOut != null)
+				objectOut.close();
 		}
 	}
 
 
 	/**
-	 * 
-	 * @param context
-	 * @param filename
-	 * @return
+	 * @param context Context required to read
+	 * @param filename the filename to read from
+	 * @return the object
+	 * @throws ClassNotFoundException 
+	 * @throws IOException 
 	 */
-	public static Object readObjectFromFile(Context context, String filename) {
+	public static Object readObjectFromFile(Context context, String filename)
+	throws IOException, ClassNotFoundException {
 
 		ObjectInputStream objectIn = null;
 		Object object = null;
@@ -68,26 +59,14 @@ public class LocalPersistence {
 			// create input stream
 			FileInputStream fileIn = context.getApplicationContext().openFileInput(filename);
 			objectIn = new ObjectInputStream(fileIn);
-			
+
 			// read it
 			object = objectIn.readObject();
 
-		} catch (FileNotFoundException e) {
-			// Do nothing
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
 		} finally {
-			if (objectIn != null) {
-				try {
-					objectIn.close();
-				} catch (IOException e) {
-					// do nowt
-				}
-			}
+			if (objectIn != null) 
+				objectIn.close();
 		}
-
 		return object;
 	}
 }

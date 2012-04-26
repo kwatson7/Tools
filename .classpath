@@ -4,9 +4,10 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="C:/Program Files (x86)/Android/android-sdk/platforms/android-8/android.jar" sourcepath="C:/Program Files (x86)/Android/android-sdk/platforms/android-9/android.jar">
 		<attributes>
-			<attribute name="javadoc_location" value="http://d.android.com/reference/"/>
+			<attribute name="javadoc_location" value="file:/C:/Program Files (x86)/Android/android-sdk/docs/reference"/>
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Program Files (x86)/Android/android-sdk/platforms/android-8/tools/lib"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/Android/android-sdk/add-ons/addon_google_apis_google_inc_8/libs/maps.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

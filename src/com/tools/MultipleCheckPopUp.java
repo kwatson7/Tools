@@ -120,7 +120,8 @@ extends AlertDialog{
 		}else{
 
 			//create and link adapters
-			CustomArrayAdapter<objectType> adapter = new CustomArrayAdapter<objectType>(mCtx, 
+			CustomArrayAdapter<objectType> adapter = null;
+				adapter = new CustomArrayAdapter<objectType>(mCtx, 
 					android.R.layout.simple_list_item_multiple_choice, mMainArrayList);
 			listView.setAdapter(adapter);
 			
@@ -291,9 +292,10 @@ extends AlertDialog{
 				public void onClick(View v) {
 					if (mCheckedItems.contains(position))
 						mCheckedItems.remove(position);
-					else
+					else{
 						mCheckedItems.add(position);
-		            ((TwoStringListViewAdapter) listView.getAdapter()).notifyDataSetChanged();
+						((TwoStringListViewAdapter) listView.getAdapter()).notifyDataSetChanged();
+					}
 				}
 			});
                         

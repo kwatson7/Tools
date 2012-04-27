@@ -37,7 +37,7 @@ extends Spinner{
 
     //TODO: determine if we want this setAdapter method or not.
    // @Override
-    public void setAdapter2(SpinnerAdapter orig ) {
+    public void setAdapter(SpinnerAdapter orig ) {
         final SpinnerAdapter adapter = newProxy(orig);
 
         super.setAdapter(adapter);

@@ -75,4 +75,31 @@ public class TwoStrings implements Comparable<TwoStrings>{
 	public String toString(){
 		return mObject1;
 	}
+	
+	/**
+	 * Combine string1 and string2 with the given separator, ignoring nulls and empty values. <br>
+	 * For example, string1 = "", and string2 = "Washington", output is just "Washington", but <br>
+	 * if string1 = "George", and string2 = "Washington", output is just "George Washington" <br>
+	 * @param separator
+	 * @return
+	 */
+	public String combineStrings(String separator){
+		//Create the StringBuilder
+		StringBuilder builder = new StringBuilder();
+		
+		// add the first string
+		if (mObject1 != null && mObject1.length() != 0)
+			builder.append(mObject1);
+		
+		// the separator
+		if (builder.length() > 0)
+			builder.append(separator);
+		
+		// the 2nd string
+		if (mObject2 != null && mObject2.length() != 0)
+			builder.append(mObject2);
+		
+		// conver to string
+		return builder.toString();
+	}
 }

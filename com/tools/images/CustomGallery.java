@@ -30,8 +30,16 @@ extends Gallery{
 		super(context);
 	}
 
-	public void setPictureId(int id){
+	public void setImageViewTouchId(int id){
 		pictureId = id;
+	}
+	
+	private ImageViewTouch getImageViewTouch(){
+		View view = getSelectedView().findViewById(pictureId);
+		ImageViewTouch imageViewTouch = null;
+		if (view != null)
+			imageViewTouch = (com.tools.images.ImageViewTouch) view;
+		return imageViewTouch;
 	}
 	
 	@Override
@@ -85,8 +93,11 @@ extends Gallery{
 	{
 		mLastScrollEvent = SystemClock.uptimeMillis();
 		didWeScrollGallery = true;
-		if (didWeScrollGallery && didWeTouchGallery)
-	    	((com.tools.images.ImageViewTouch) getSelectedView().findViewById( pictureId )).isDraggable = false;
+		if (didWeScrollGallery && didWeTouchGallery){
+			ImageViewTouch image = getImageViewTouch();
+			if (image != null)
+				image.isDraggable = false;
+		}
 		return super.onScroll(e1, e2, distanceX, distanceY);
 	}
 	
@@ -101,10 +112,9 @@ extends Gallery{
 	@Override
 	public boolean onInterceptTouchEvent( MotionEvent ev ) {
 
-	    View view = getSelectedView();
-	    ImageViewTouch image = (ImageViewTouch) view.findViewById( pictureId );
+	    ImageViewTouch image = getImageViewTouch();
 
-	    if ( !image.isDraggable() ) {
+	    if (image==null || !image.isDraggable() ) {
 	        onTouchEvent( ev );
 	    }
 	    
@@ -113,13 +123,16 @@ extends Gallery{
 	    if (ev.getAction() == MotionEvent.ACTION_UP || ev.getAction() == MotionEvent.ACTION_CANCEL){
 	    	didWeTouchGallery = false;
 	    	didWeScrollGallery = false;
-	    	image.isDraggable = true;
+	    	if (image != null)
+	    		image.isDraggable = true;
 	    }
 	    
-	    if (didWeScrollGallery && didWeTouchGallery)
-	    	image.isDraggable = false;
-	    else
-	    	image.isDraggable = true;
+	    if (image != null){
+	    	if (didWeScrollGallery && didWeTouchGallery)
+	    		image.isDraggable = false;
+	    	else
+	    		image.isDraggable = true;
+	    }
 
 	   return super.onInterceptTouchEvent( ev );
 	}

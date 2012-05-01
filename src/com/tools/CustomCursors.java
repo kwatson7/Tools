@@ -1087,6 +1087,192 @@ public class CustomCursors {
     	return output;
 	}
 	
+	/** 
+	 * Look up in the address book to try and find the user of phone, based on phone number and/or user account info
+	 * @return first and last name, email hashset, and phonenumber hashset.
+	 */
+	public static ThreeObjects<TwoStrings, HashSet<String>, HashSet<String>>
+		findSelfInAddressBook(Activity act){
+
+		// grab phone number from phone
+		String phone = com.tools.Tools.getMyStrippedPhoneNumber(act);
+		String mainPhone = phone;
+		if (mainPhone == null)
+			mainPhone = "";
+
+		// now grab user email from accounts list, just grab the first one
+		ArrayList<String> googleAccounts = com.tools.CustomCursors.getGoogleAccountNames(act);
+
+		// if empty, then add a null "account" for searching
+		if (googleAccounts.size() == 0)
+			googleAccounts.add(null);
+
+		// find all the matches in address book that have both phone and email looping across googleAccounts
+		HashSet<Integer> contactIds = new HashSet<Integer>();
+		for (String account : googleAccounts){
+			HashSet<Integer> tmp = 
+				com.tools.CustomCursors.getCursorFromPhoneAndEmail(act, phone, account, true);
+			if (tmp != null)
+				contactIds.addAll(tmp);
+		}
+
+		// if there are none that both match, then do either or
+		if (contactIds.size() == 0){
+			for (String account : googleAccounts){
+				HashSet<Integer> tmp = 
+					com.tools.CustomCursors.getCursorFromPhoneAndEmail(act, phone, account, false);
+				if (tmp != null)
+					contactIds.addAll(tmp);
+			}
+		}
+
+		// find relevant contact info from database
+		HashSet<String> phoneNumberArray = new HashSet<String>();
+		HashSet<String> emailAddressArray = new HashSet<String>();
+		String displayName = "";
+		TwoStrings fullName = new TwoStrings("", "");
+
+		// add phone and google accounts
+		if (phone != null && phone.length() != 0)
+			phoneNumberArray.add(phone);
+		if (googleAccounts != null)
+			for (String account : googleAccounts)
+				if (account != null && account.length() != 0)
+					emailAddressArray.add(account);
+
+		// find phone numbers and display name
+		if (contactIds != null && contactIds.size() != 0){
+			// build search string
+			String selection = com.tools.CustomCursors.buildQueryFromArray
+			(ContactsContract.CommonDataKinds.Phone.CONTACT_ID, contactIds);
+
+			String[] selectionArgs = null;
+
+			// find user info of contacts
+			String[] projection = {
+					CommonDataKinds.Phone.DISPLAY_NAME, 
+					CommonDataKinds.Phone.NUMBER,
+					CommonDataKinds.Phone.CONTACT_ID,
+					CommonDataKinds.Phone.RAW_CONTACT_ID};
+
+			// grab cursor from search result grabbing names of interest
+			Cursor cursor = act.getContentResolver().query(
+					ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+					projection,
+					selection,
+					selectionArgs,
+					null);
+
+			// grab phone numbers and/or name
+			if (cursor != null){
+				int numberIndex = cursor.getColumnIndex(CommonDataKinds.Phone.NUMBER);
+				int nameIndex = cursor.getColumnIndex(CommonDataKinds.Phone.DISPLAY_NAME);
+				if (cursor.moveToFirst()){
+					do{
+						// grab display name
+						if (displayName.length() == 0){
+							String name = cursor.getString(nameIndex);
+							if (name != null)
+								displayName = name;
+						}
+
+						// grab full name
+						TwoStrings fullNameTmp = com.tools.CustomCursors.getFirstAndLastName(cursor, act);
+						if ((fullName.mObject1 == null ||
+								fullName.mObject1.length() == 0) &&
+								(fullNameTmp.mObject1 != null &&
+										fullNameTmp.mObject1.length() != 0))
+							fullName.mObject1 = fullNameTmp.mObject1;
+
+						if ((fullName.mObject2 == null ||
+								fullName.mObject2.length() == 0) &&
+								(fullNameTmp.mObject2 != null &&
+										fullNameTmp.mObject2.length() != 0))
+							fullName.mObject2 = fullNameTmp.mObject2;
+
+						// add phone numbers
+						String number = cursor.getString(numberIndex);
+						if (number != null)
+							phoneNumberArray.add(number);
+					}while (cursor.moveToNext());
+				}
+				cursor.close();
+			}
+
+			// now repeat for email addresses
+
+			// find user info of contacts
+			String[] projection2 = {
+					CommonDataKinds.Email.DISPLAY_NAME, 
+					CommonDataKinds.Email.DATA,
+					CommonDataKinds.Email.CONTACT_ID,
+					CommonDataKinds.Email.RAW_CONTACT_ID};
+
+			// grab cursor from search result grabbing names of interest
+			Cursor cursor2 = act.getContentResolver().query(
+					ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+					projection2,
+					selection,
+					selectionArgs,
+					null);
+
+			// grab email and/or name
+			if (cursor2 != null){
+				int emailIndex = cursor2.getColumnIndex(CommonDataKinds.Email.DATA);
+				int nameIndex2 = cursor2.getColumnIndex(CommonDataKinds.Email.DISPLAY_NAME);
+				if (cursor2.moveToFirst()){
+					do{
+						// grab display name
+						if (displayName.length() == 0){
+							String name = cursor2.getString(nameIndex2);
+							if (name != null)
+								displayName = name;
+						}
+
+						// grab full name
+						TwoStrings fullNameTmp = com.tools.CustomCursors.getFirstAndLastName(cursor2, act);
+						if ((fullName.mObject1 == null ||
+								fullName.mObject1.length() == 0) &&
+								(fullNameTmp.mObject1 != null &&
+										fullNameTmp.mObject1.length() != 0))
+							fullName.mObject1 = fullNameTmp.mObject1;
+
+						if ((fullName.mObject2 == null ||
+								fullName.mObject2.length() == 0) &&
+								(fullNameTmp.mObject2 != null &&
+										fullNameTmp.mObject2.length() != 0))
+							fullName.mObject2 = fullNameTmp.mObject2;
+
+						// add email addresses
+						String email = cursor2.getString(emailIndex);
+						if (email != null)
+							emailAddressArray.add(email);
+					}while (cursor2.moveToNext());
+				}
+				cursor2.close();
+			}
+		}
+
+		// figure out which name parts to use
+		if (fullName.mObject1 == null
+				|| fullName.mObject1.length() == 0
+				|| fullName.mObject2 == null
+				|| fullName.mObject2.length() == 0 
+				&& (displayName != null && displayName.length() != 0)){
+			fullName.mObject1 = displayName;
+			fullName.mObject2 = "";
+		}
+
+		// initialize a person with name, phones and emails.
+		ThreeObjects<TwoStrings, HashSet<String>, HashSet<String>> output = 
+				new ThreeObjects<TwoStrings, HashSet<String>, HashSet<String>>(
+						fullName,
+						emailAddressArray,
+						phoneNumberArray);
+			
+		return output;
+	}
+	
 	/**
 	 * Find a list of phone numbers and email addresses of the contact with the given contactId
 	 * @param ctx A context to perform the search on

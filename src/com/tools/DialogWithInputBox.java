@@ -3,6 +3,7 @@ package com.tools;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.EditText;
@@ -69,10 +70,19 @@ extends Activity {
 		alert.setNegativeButton("Cancel",
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
-						dialog.cancel();
+						setResult(RESULT_CANCELED);
+						finish();
 					}
 				});
+		
+		alert.setOnCancelListener(new OnCancelListener() {
+			
+			@Override
+			public void onCancel(DialogInterface arg0) {
+				setResult(RESULT_CANCELED);
+				finish();
+			}
+		});
 		alert.show();
-
 	}
 }

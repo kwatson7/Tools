@@ -34,8 +34,15 @@ extends Gallery{
 		pictureId = id;
 	}
 	
+	/**
+	 * Grab the current imageViewTouch that is within this gallery
+	 * @return
+	 */
 	private ImageViewTouch getImageViewTouch(){
-		View view = getSelectedView().findViewById(pictureId);
+		View selected = getSelectedView();
+		if (selected == null)
+			return null;
+		View view = selected.findViewById(pictureId);
 		ImageViewTouch imageViewTouch = null;
 		if (view != null)
 			imageViewTouch = (com.tools.images.ImageViewTouch) view;
@@ -134,7 +141,8 @@ extends Gallery{
 	    		image.isDraggable = true;
 	    }
 
-	   return super.onInterceptTouchEvent( ev );
+	   super.onInterceptTouchEvent( ev );
+	   return false;
 	}
 	
 	/*

@@ -8,10 +8,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
@@ -28,6 +31,8 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
@@ -40,7 +45,9 @@ import android.provider.MediaStore.MediaColumns;
 import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 import android.text.Html;
+import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
@@ -1077,6 +1084,9 @@ public class Tools {
 			final int maxThumbnailDimension,
 			boolean forceBase2){
 			
+		if (imageData == null || imageData.length == 0)
+			return null;
+		
 		// determine the size of the image first, so we know at what sample rate to use.
 		BitmapFactory.Options options=new BitmapFactory.Options();
 		options.inJustDecodeBounds = true;
@@ -1280,4 +1290,236 @@ public class Tools {
 		// return true
 		return true;
 	}
+	
+	/**
+     * Try to create the thumbnail from the full picture reading any exif data.
+     * @param fullFile the path to the full file
+     * @param maxPixelSize the maximum sixe in pixels for any dimension of the thumbnail. 
+     * @param forceBase2 forcing the downsizing to be powers of 2 (ie 2,4,8). Faster, but obviously less specific size is allowable.
+     * @return the bitmap, or null if any errors occured
+     */
+    public static Bitmap getThumbnail(
+    		String fullFile,
+    		int maxPixelSize,
+    		boolean forceBase2){
+    	
+    	// open the full file
+    	if (fullFile == null || fullFile.length() == 0)
+    		return null;
+    	RandomAccessFile f = null;
+    	try{
+    		f = new RandomAccessFile(fullFile, "r");
+    	}catch (FileNotFoundException  e){
+    		return null;
+    	}
+    	
+    	// read the file data
+    	byte[] b = null;
+    	ExifInterface exif = null;
+    	try{
+    		b = new byte[(int)f.length()];
+    		f.read(b);
+    		f.close();
+    		
+    		// read the orientaion
+   		 	exif = new ExifInterface(fullFile);
+    	}catch(IOException e){
+    		e.printStackTrace();
+    		return null;
+    	}
+
+    	// grab the rotation
+		int rotation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 
+				ExifInterface.ORIENTATION_UNDEFINED);
+		
+		// create the byte array
+		byte[] thumbnail = com.tools.Tools.makeThumbnail(
+				b,
+				rotation,
+				maxPixelSize,
+				forceBase2);
+		
+		if (thumbnail == null)
+			return null;
+		
+		// convert to bitmap
+		return BitmapFactory.decodeByteArray(thumbnail, 0, thumbnail.length);
+	}
+    
+    /**
+     * Save the view and all its children to a bitmap <br>
+     * @param view the view to save
+     * @param viewsToHide a list of views to hide before creating the bitmap, null is acceptabl
+     * @param viewToTakeFocus allow for the given view to take focus. Null is accetpable
+     * This is helpful, because if you selected a button to trigger this method, the button will be highlighted
+     * A layout view is a usually a good choice
+     * @param nullColor the color to ignore and to only extract the center region, for example to chop the black edges
+     * enter Color.rgb(0, 0, 0); Enter null to ignore
+     * @return the bitmap created, null if error occured
+     */
+    public static Bitmap saveViewToBitmap(View view, ArrayList<View> viewsToHide, View viewToTakeFocus, Integer nullColor){
+		
+    	if (view == null){
+    		Log.e("com.tools", "null view was input");
+    		return null;
+    	}
+    	
+		// find which view has focus and turn it off
+		int childHasFocus = -1;
+		if (view instanceof ViewGroup){
+			ViewGroup vg = (ViewGroup) view;
+			for (int i = 0; i < vg.getChildCount(); i++){
+				View v = vg.getChildAt(i);
+				if (v.hasFocus()){
+					childHasFocus = i;
+					break;
+				}
+			}
+		}
+		
+		// hide requested views
+		HashMap<View, Integer> previousStateViews = new HashMap<View, Integer>();
+		if (viewsToHide != null){
+			for (View item : viewsToHide){
+				if (item != null){
+					previousStateViews.put(item, item.getVisibility());
+					item.setVisibility(View.INVISIBLE);
+					item.invalidate();
+				}
+			}
+		}
+
+		// the the focus to the given view
+		boolean isFocusable = false;
+		if (viewToTakeFocus != null){
+			isFocusable = viewToTakeFocus.isFocusableInTouchMode();
+			viewToTakeFocus.setFocusableInTouchMode(true);
+			viewToTakeFocus.requestFocus();
+		}
+		
+		// create the bitmap
+		Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
+		if (bitmap != null){
+			Canvas c = new Canvas(bitmap);
+			view.draw(c);
+		}
+		
+		// extract center region of bitmap
+		if (nullColor != null)
+			bitmap = bitmapExtractCenter(bitmap, nullColor);
+
+		// show the views that we previously hid
+		if (viewsToHide != null){
+			for (View item : viewsToHide){
+				if (item != null){
+					item.setVisibility(previousStateViews.get(item));
+					item.invalidate();
+				}
+			}
+		}
+		
+		// reset focus
+		if (viewToTakeFocus != null){
+			viewToTakeFocus.setFocusableInTouchMode(isFocusable);
+		}
+		if (view instanceof ViewGroup && childHasFocus != -1){
+			ViewGroup vg = (ViewGroup) view;
+			View v = vg.getChildAt(childHasFocus);
+			v.requestFocus();
+		}
+		
+		// the bitmap
+		return bitmap;
+	}
+    
+    /**
+     * Remove the edges of bitmap by extracting the center region that do not match the given nullColor
+     * @param bitmap the source bitmap
+     * @param nullColor the color that is considered void and we will chop. For example, for black simply enter <br>
+     * Color.argb(0, 0, 0, 0); 
+     * @return
+     */
+    public static Bitmap bitmapExtractCenter(Bitmap bitmap, int nullColor){
+    	if (bitmap == null)
+    		return null;
+    	
+    	// measure size
+		final int width = bitmap.getWidth();
+		final int height = bitmap.getHeight();
+		
+		// grab pixel data
+		int[] pixels = new int[width*height];
+		bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+		
+		// which row will we start and end and cols as well
+		int rowStart = 0;
+		int rowEnd = height-1;
+		int colStart = 0;
+		int colEnd = width-1;
+		
+		// find the top that we can crop
+		boolean outerBreak = false;
+		for (int i = 0; i <height; i++){
+			int ii = i*width;
+			for (int j = 0; j < width; j++){				
+				if (pixels[ii + j] != nullColor){
+					outerBreak = true;
+					break;				
+				}
+			}
+			if (outerBreak)
+				break;
+			rowStart++;
+		}
+		
+		// find the bottom that we can crop
+		outerBreak = false;
+		for (int i = height-1; i >= 0; i--){
+			int ii = i*width;
+			for (int j = 0; j < width; j++){
+				if (pixels[ii + j] != nullColor){
+					outerBreak = true;
+					break;				
+				}
+			}
+			if (outerBreak)
+				break;
+			rowEnd--;
+		}
+		
+		// find the left we can crop
+		outerBreak = false;
+		for (int j = 0; j < width; j++){
+			for (int i = 0; i <height; i++){	
+				if (pixels[i*width + j] != nullColor){
+					outerBreak = true;
+					break;				
+				}
+			}
+			if (outerBreak)
+				break;
+			colStart++;
+		}
+		
+		// find the right that we can crop
+		outerBreak = false;
+		for (int j = width-1; j >= 0; j--){
+			for (int i = 0; i <height; i++){	
+				if (pixels[i*width + j] != nullColor){
+					outerBreak = true;
+					break;				
+				}
+			}
+			if (outerBreak)
+				break;
+			colEnd--;
+		}
+		
+		// sub index of matrix
+		int newWidth = colEnd-colStart+1;
+		int newHeight = rowEnd-rowStart+1;
+		if (newWidth <= 0 || newHeight <= 0)
+			return null;
+		return Bitmap.createBitmap(bitmap, colStart, rowStart, newWidth, newHeight);	
+    }
 }

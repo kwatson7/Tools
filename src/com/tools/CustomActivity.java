@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.os.Bundle;
 
 /**
@@ -15,6 +16,10 @@ import android.os.Bundle;
 public abstract class CustomActivity
 extends Activity{
 
+	/**
+	 * The context of this activity
+	 */
+	protected Context ctx = this;
 	
 	/** The instance of the configuration properties */
 	protected ConfigurationProperties configurationProperties = null;

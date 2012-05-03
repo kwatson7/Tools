@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ public class ImageCapture {
 	private static final String CAMERA_INTENT_DATA_KEY = "data";
 	private static final String BITMAP_KEY = "ImageCapture.BITMAP_KEY";
 	private static final String FILE_PATH_KEY = "ImageCapture.FILE_PATH_KEY";
+	private static final String FILE_URI_KEY = "ImageCapture.FILE_URI_KEY";
 
 	// member variables
 	private String filePath = null;
@@ -79,8 +81,45 @@ public class ImageCapture {
 	}
 	
 	/**
-	 * Create an intent to laucnh a new activity will the correct data required to read the iamge <br>
-	 * This should be called from within onActivityResult
+	 * Create an intent that when launched will ask the user to select an image
+	 * @return
+	 * @see get
+	 */
+	public static Intent createImageSelectionIntent(){
+		Intent i = new Intent(Intent.ACTION_PICK,
+	               android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+		return i;
+	}
+	
+	/**
+	 * Create an intent to start an activity with the given data. <br>
+	 * This data should have been returned from an activity that was launched with createImageSelectionIntent <br>
+	 * This should be called within onActivityResult
+	 * @param ctx The calling context
+	 * @param newClassToStart the new activity to start
+	 * @param resultCode the resultCode of the returning intent
+	 * @param data The returned data
+	 * @return the intent to tart the activity. If there is no data or not RESULT_OK, null is returned
+	 */
+	public static Intent createIntentWithCorrectExtrasAfterSelection(Context ctx, Class<?> newClassToStart, int resultCode, Intent data){
+		
+		if (resultCode == Activity.RESULT_OK && data != null){
+			// create the new intent
+			Intent intent = new Intent(ctx, newClassToStart);
+
+			// now add the path to the file
+			Uri selectedImage = data.getData();
+			if (selectedImage != null)
+				intent.putExtra(FILE_URI_KEY, selectedImage);
+
+			return intent;
+		}else
+			return null;
+	}
+	
+	/**
+	 * Create an intent to laucnh a new activity with the correct data required to read the image <br>
+	 * This should be called from within onActivityResult() after createImageCaptureIntent()
 	 * @param ctx The calling context
 	 * @param newClassToStart the new class to start
 	 * @param resultCode The result code from the camera return
@@ -152,9 +191,29 @@ public class ImageCapture {
 		// the max picture size
 		Display display = act.getWindowManager().getDefaultDisplay();
 		int maxPixelSize = Math.max(display.getWidth(), display.getHeight()); 
-
+		String path = null;
+		
 		// try to read the big file first
-		String path = extras.getString(FILE_PATH_KEY);
+		path = extras.getString(FILE_PATH_KEY);
+		
+		// try from uri also if we need to
+		if (path == null || path.length() == 0){
+			// now try to read from URI
+			Uri uri = extras.getParcelable(FILE_URI_KEY);
+			if (uri != null){
+				String[] filePathColumn = {MediaStore.Images.Media.DATA};
+	        
+				Cursor cursor = act.getContentResolver().query(uri, filePathColumn, null, null, null);
+				if (cursor != null && cursor.moveToFirst()){
+					int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+			        path = cursor.getString(columnIndex);
+			        cursor.close();
+				}else if (cursor != null)
+					cursor.close();	
+			}
+		}
+		
+		// now actually read the bitmap from the path
 		if (path != null && path.length() > 0){
 			File file = new File(path);
 			if (file.exists()){

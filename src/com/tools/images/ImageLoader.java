@@ -425,7 +425,8 @@ public class ImageLoader<ID_TYPE, THUMBNAIL_TYPE, FULL_IMAGE_TYPE>{
      * Stop background threads, usually call this on activity onPause
      */
     public void stopThreads(){
-    	executorService.shutdown();
+    	if (executorService != null)
+    		executorService.shutdown();
     	executorService = null;
     }
     
